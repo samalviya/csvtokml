@@ -13,8 +13,8 @@ def create_kml(df):
     for _, row in df.iterrows():
         form_id = row['FormId']
         obj = row['Object']
-        lat = row['Latitude']
-        lon = row['Longitude']
+        lon = row['Latitude']
+        lat = row['Longitude']
         kml_content += f"""
         <Placemark>
           <name>{form_id}</name>
