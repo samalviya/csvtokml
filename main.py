@@ -4,21 +4,23 @@ import folium
 from streamlit_folium import folium_static
 import io
 
-# Function to create KML content without height
+# Function to create KML content with FormId as title, Object as description, and latitude before longitude
 def create_kml(df):
     kml_content = """<?xml version="1.0" encoding="UTF-8"?>
     <kml xmlns="http://www.opengis.net/kml/2.2">
       <Document>
     """
     for _, row in df.iterrows():
+        form_id = row['FormId']
         obj = row['Object']
-        lon = row['Longitude']
         lat = row['Latitude']
+        lon = row['Longitude']
         kml_content += f"""
         <Placemark>
-          <name>{obj}</name>
+          <name>{form_id}</name>
+          <description>{obj}</description>
           <Point>
-            <coordinates>{lon},{lat},0</coordinates>
+            <coordinates>{lat},{lon},0</coordinates>
           </Point>
         </Placemark>
         """
@@ -31,9 +33,10 @@ def create_kml(df):
 # Function to generate a demo CSV file
 def generate_demo_csv():
     demo_data = {
+        'FormId': ['F001', 'F002'],
         'Object': ['Plant1', 'Plant2'],
-        'Longitude': [77.64103521144537, 77.64110021144537],
-        'Latitude': [22.666838096303614, 22.667000096303614]
+        'Latitude': [22.666838096303614, 22.667000096303614],
+        'Longitude': [77.64103521144537, 77.64110021144537]
     }
     demo_df = pd.DataFrame(demo_data)
     return demo_df.to_csv(index=False).encode('utf-8')
@@ -55,7 +58,7 @@ uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 if uploaded_file:
     # Load data without height column
     df = pd.read_csv(uploaded_file)
-    df = df[['Object', 'Longitude', 'Latitude']]
+    df = df[['FormId', 'Object', 'Latitude', 'Longitude']]
     st.write("Uploaded CSV Data:", df)
     
     # Generate KML content
@@ -76,7 +79,7 @@ if uploaded_file:
     for _, row in df.iterrows():
         folium.Marker(
             location=[row['Latitude'], row['Longitude']],
-            popup=row['Object'],
+            popup=f"{row['FormId']}: {row['Object']}",
             icon=folium.Icon(color="green", icon="info-sign")
         ).add_to(m)
 
