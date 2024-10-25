@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 import folium
-from streamlit_folium import st_folium
+from streamlit_folium import folium_static
 import io
 
 # Function to create KML content without height
@@ -82,4 +82,4 @@ if uploaded_file:
 
     # Display map in Streamlit
     st.write("Map Visualization:")
-    st_folium(m, width=700, height=500)
+    folium_static(m, width=700, height=500)
