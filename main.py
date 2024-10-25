@@ -41,9 +41,19 @@ def generate_demo_csv():
     demo_df = pd.DataFrame(demo_data)
     return demo_df.to_csv(index=False).encode('utf-8')
 
+# Function to load data from either CSV or XLSX
+def load_data(uploaded_file):
+    if uploaded_file.name.endswith('.csv'):
+        return pd.read_csv(uploaded_file)
+    elif uploaded_file.name.endswith('.xlsx'):
+        return pd.read_excel(uploaded_file)
+    else:
+        st.error("Unsupported file format. Please upload a CSV or XLSX file.")
+        return None
+
 # Streamlit layout
 st.title("KML Generator and Map Visualizer from Plant Data")
-st.write("Upload your CSV file, generate a KML file, visualize the coordinates on a map, and download the KML.")
+st.write("Upload your CSV or XLSX file, generate a KML file, visualize the coordinates on a map, and download the KML.")
 
 # Download demo CSV file button
 st.download_button(
@@ -54,35 +64,36 @@ st.download_button(
 )
 
 # File uploader
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+uploaded_file = st.file_uploader("Choose a CSV or XLSX file", type=["csv", "xlsx"])
 if uploaded_file:
     # Load data without height column
-    df = pd.read_csv(uploaded_file)
-    df = df[['FormId', 'Object', 'Latitude', 'Longitude']]
-    st.write("Uploaded CSV Data:", df)
-    
-    # Generate KML content
-    kml_content = create_kml(df)
-    
-    # KML file download
-    kml_bytes = kml_content.encode("utf-8")
-    st.download_button(
-        label="Download KML File",
-        data=kml_bytes,
-        file_name="plant_count.kml",
-        mime="application/vnd.google-earth.kml+xml"
-    )
-    
-    # Folium map visualization
-    map_center = [df['Latitude'].mean(), df['Longitude'].mean()]
-    m = folium.Map(location=map_center, zoom_start=13)
-    for _, row in df.iterrows():
-        folium.Marker(
-            location=[row['Latitude'], row['Longitude']],
-            popup=f"{row['FormId']}: {row['Object']}",
-            icon=folium.Icon(color="green", icon="info-sign")
-        ).add_to(m)
+    df = load_data(uploaded_file)
+    if df is not None:
+        df = df[['FormId', 'Object', 'Latitude', 'Longitude']]
+        st.write("Uploaded Data:", df)
 
-    # Display map in Streamlit
-    st.write("Map Visualization:")
-    folium_static(m, width=700, height=500)
+        # Generate KML content
+        kml_content = create_kml(df)
+
+        # KML file download
+        kml_bytes = kml_content.encode("utf-8")
+        st.download_button(
+            label="Download KML File",
+            data=kml_bytes,
+            file_name="plant_count.kml",
+            mime="application/vnd.google-earth.kml+xml"
+        )
+
+        # Folium map visualization
+        map_center = [df['Latitude'].mean(), df['Longitude'].mean()]
+        m = folium.Map(location=map_center, zoom_start=13)
+        for _, row in df.iterrows():
+            folium.Marker(
+                location=[row['Latitude'], row['Longitude']],
+                popup=f"{row['FormId']}: {row['Object']}",
+                icon=folium.Icon(color="green", icon="info-sign")
+            ).add_to(m)
+
+        # Display map in Streamlit
+        st.write("Map Visualization:")
+        folium_static(m, width=700, height=500)
